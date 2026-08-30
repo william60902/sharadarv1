@@ -209,6 +209,15 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Sharadar licensed data and local ingestion state
+# Public documentation snapshots under docs/ are intentionally versioned.
+data/
+downloads/
+artifacts/
+*.csv
+*.parquet
+*.zip
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
