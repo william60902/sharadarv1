@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "medina-sharadar"
+version = "0.1.0"
+description = "Sharadar ingestion SDK for immutable bulk and incremental data pipelines"
+requires-python = ">=3.11"
+dependencies = [
+  "cryptography>=42.0.0",
+  "pymongo>=4.0.0",
+  "requests>=2.31.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+  "performance: bounded local complexity and throughput checks",
+  "live: paid Sharadar API smoke tests (excluded from the default suite)",
+]
