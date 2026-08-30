@@ -1,4 +1,4 @@
-"""Bounded MongoDB current-state upserts for normalized Sharadar rows."""
+"""Bounded MongoDB upserts for schema-admitted Sharadar rows."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class MongoUpsertReceipt:
 
 
 class MongoCurrentStore:
-    """Persist normalized current rows by the registry's declared primary key."""
+    """Persist query-ready rows by the registry's declared primary key."""
 
     def __init__(self, database: Any, *, batch_size: int = 1_000) -> None:
         if (
@@ -41,7 +41,10 @@ class MongoCurrentStore:
 
     @staticmethod
     def collection_name(table: str) -> str:
-        return f"normalized_{normalize_table(table).value}_current"
+        # The database already identifies the vendor and deployment.  Keeping
+        # collection names identical to Sharadar's public table names avoids
+        # confusing schema/type admission with quantitative normalization.
+        return normalize_table(table).value
 
     def ensure_indexes(self, table: str, registry: Any) -> tuple[str, ...]:
         exact_table = normalize_table(table).value

@@ -172,7 +172,7 @@ class _ProbeDatabase:
         self.collection = collection
 
     def __getitem__(self, name):
-        assert name == "normalized_descriptions_current"
+        assert name == "descriptions"
         return self.collection
 
 

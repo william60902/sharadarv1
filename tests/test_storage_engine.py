@@ -160,7 +160,7 @@ def test_mongo_upsert_is_bounded_deduplicated_and_index_cached() -> None:
         "daily", rows[-1:], REGISTRY, run_id="run2", source_sha256="b" * 64
     )
 
-    collection = database["normalized_daily_current"]
+    collection = database["daily"]
     assert receipt.input_rows == 3
     assert receipt.submitted_rows == 2
     assert collection.batch_sizes == [1, 1, 1]

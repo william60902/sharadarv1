@@ -22,7 +22,7 @@ Sharadar REST / Bulk
   -> immutable content-addressed raw capture
   -> pinned schema v1 exact-header and type admission
   -> normalized Parquet on NAS
-  -> normalized current collection in Mongo
+  -> schema-admitted query collection in Mongo
   -> watermark
   -> immutable published run manifest (commit marker, written last)
 ```
@@ -43,19 +43,25 @@ Initial history uses Bulk. REST is reserved for bounded DEV canaries and daily
 
 | Table | Mongo collection | Rows |
 |---|---|---:|
-| descriptions | `normalized_descriptions_current` | 250 |
-| tickers | `normalized_tickers_current` | 18 |
-| fundamentals | `normalized_fundamentals_current` | 1,000 |
-| daily | `normalized_daily_current` | 744 |
-| actions | `normalized_actions_current` | 250 |
-| events | `normalized_events_current` | 250 |
-| sp500 | `normalized_sp500_current` | 250 |
+| descriptions | `descriptions` | 250 |
+| tickers | `tickers` | 18 |
+| fundamentals | `fundamentals` | 1,000 |
+| daily | `daily` | 744 |
+| actions | `actions` | 250 |
+| events | `events` | 250 |
+| sp500 | `sp500` | 250 |
 | **Total** |  | **2,762** |
 
 The fundamentals slice contains AAPL, JPM, MSFT, NVDA, UNH, and XOM.  Every
 issuer has at least two distinct ARQ report periods; ARQ, ARY, and ART are all
 present. This is a bounded engineering canary, not a research universe or a
 factor artifact.
+
+Before the first PROD backfill, Mongo collections were intentionally simplified
+from `normalized_<table>_current` to the public Sharadar table names.  The word
+`normalized` described schema/type admission, not factor z-scoring or ranking,
+and was therefore misleading inside a quant platform.  Vendor raw captures stay
+immutable on NAS; Mongo collection naming does not change lineage or replay.
 
 The read-only promotion report is stored at:
 
