@@ -11,6 +11,7 @@ from sharadar_pipeline.catalog import (
     table_spec,
 )
 from sharadar_pipeline.routes import (
+    PRODUCTION_BACKFILL_CONFIRMATION,
     Deployment,
     ProductionRouteLocked,
     RouteError,
@@ -76,9 +77,13 @@ def test_routes_bind_exact_database_and_artifact_root():
     dev = route_for("dev")
     prod = route_for(Deployment.PROD)
     assert dev.database_name == "SHARADAR_DEV"
-    assert dev.artifact_root == Path("/Volumes/Pentagon_Quant/sharadar/dev")
+    assert dev.artifact_root == Path(
+        "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev"
+    )
     assert prod.database_name == "SHARADAR_PROD"
-    assert prod.artifact_root == Path("/Volumes/Pentagon_Quant/sharadar/prod")
+    assert prod.artifact_root == Path(
+        "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod"
+    )
 
 
 def test_dev_write_requires_exact_confirmation():
@@ -111,6 +116,14 @@ def test_cross_database_and_prod_write_fail_before_io():
             confirmation="SHARADAR_PROD_WRITE",
         )
 
+    assert require_route_io(
+        prod,
+        database_name="SHARADAR_PROD",
+        write=True,
+        confirmation="SHARADAR_PROD_WRITE",
+        production_confirmation=PRODUCTION_BACKFILL_CONFIRMATION,
+    ) is prod
+
 
 def test_prod_route_remains_readable_for_future_consumers():
     prod = route_for("prod")
@@ -121,7 +134,9 @@ def test_forged_route_cannot_cross_database_or_artifact_boundaries():
     forged = SharadarRoute(
         deployment=Deployment.DEV,
         database_name="SHARADAR_PROD",
-        artifact_root=Path("/Volumes/Pentagon_Quant/sharadar/prod"),
+        artifact_root=Path(
+            "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod"
+        ),
         write_confirmation="SHARADAR_DEV_WRITE",
         live_write_authorized=True,
     )

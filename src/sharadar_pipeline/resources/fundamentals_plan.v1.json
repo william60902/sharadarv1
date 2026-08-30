@@ -1,0 +1,1183 @@
+{
+  "registry_version": 1,
+  "registry_name": "fundamentals_plan",
+  "dialect": "postgres",
+  "tables": [
+    {
+      "name": "descriptions",
+      "source_url": "https://api.sharadar.com/v1.0/schema/descriptions?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "5ab669f02c85ecab1c1c6579292ea42ebe11dbb369dba9fd5212120d3edb06d0",
+      "ordered_headers": [
+        "table",
+        "indicator",
+        "isfilter",
+        "isprimarykey",
+        "title",
+        "description",
+        "unittype"
+      ],
+      "columns": [
+        {
+          "name": "table",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "indicator",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "isfilter",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "isprimarykey",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "unittype",
+          "postgres_type": "text",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "table",
+        "indicator"
+      ],
+      "date_columns": []
+    },
+    {
+      "name": "tickers",
+      "source_url": "https://api.sharadar.com/v1.0/schema/tickers?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "609419de96b27395a93d614b90742e76982cd53412620763be3ba9e7154c8c72",
+      "ordered_headers": [
+        "table",
+        "permaticker",
+        "ticker",
+        "name",
+        "exchange",
+        "isdelisted",
+        "category",
+        "cusips",
+        "siccode",
+        "sicsector",
+        "sicindustry",
+        "figi",
+        "famaindustry",
+        "sector",
+        "industry",
+        "scalemarketcap",
+        "scalerevenue",
+        "relatedtickers",
+        "currency",
+        "location",
+        "lastupdated",
+        "firstadded",
+        "firstpricedate",
+        "lastpricedate",
+        "firstquarter",
+        "lastquarter",
+        "secfilings",
+        "companysite"
+      ],
+      "columns": [
+        {
+          "name": "table",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "permaticker",
+          "postgres_type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "ticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "exchange",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "isdelisted",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "category",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "cusips",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "siccode",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "sicsector",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "sicindustry",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "figi",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "famaindustry",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "sector",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "industry",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "scalemarketcap",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "scalerevenue",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "relatedtickers",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "currency",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "location",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "lastupdated",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "firstadded",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "firstpricedate",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "lastpricedate",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "firstquarter",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "lastquarter",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "secfilings",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "companysite",
+          "postgres_type": "text",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "table",
+        "permaticker",
+        "ticker"
+      ],
+      "date_columns": [
+        "lastupdated",
+        "firstadded",
+        "firstpricedate",
+        "lastpricedate"
+      ]
+    },
+    {
+      "name": "fundamentals",
+      "source_url": "https://api.sharadar.com/v1.0/schema/fundamentals?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "f9c9325e8ebd397d61bdbf82c57f98d1e6a593f5c8a61a0a41c62bebddc46120",
+      "ordered_headers": [
+        "ticker",
+        "dimension",
+        "calendardate",
+        "date",
+        "reportperiod",
+        "fiscalperiod",
+        "lastupdated",
+        "accoci",
+        "assets",
+        "assetsavg",
+        "assetsc",
+        "assetsnc",
+        "assetturnover",
+        "bvps",
+        "capex",
+        "cashneq",
+        "cashnequsd",
+        "cor",
+        "consolinc",
+        "currentratio",
+        "de",
+        "debt",
+        "debtc",
+        "debtnc",
+        "debtusd",
+        "deferredrev",
+        "depamor",
+        "deposits",
+        "divyield",
+        "dps",
+        "ebit",
+        "ebitda",
+        "ebitdamargin",
+        "ebitdausd",
+        "ebitusd",
+        "ebt",
+        "eps",
+        "epsdil",
+        "epsusd",
+        "equity",
+        "equityavg",
+        "equityusd",
+        "ev",
+        "evebit",
+        "evebitda",
+        "fcf",
+        "fcfps",
+        "fxusd",
+        "gp",
+        "grossmargin",
+        "intangibles",
+        "intexp",
+        "invcap",
+        "invcapavg",
+        "inventory",
+        "investments",
+        "investmentsc",
+        "investmentsnc",
+        "liabilities",
+        "liabilitiesc",
+        "liabilitiesnc",
+        "marketcap",
+        "ncf",
+        "ncfbus",
+        "ncfcommon",
+        "ncfdebt",
+        "ncfdiv",
+        "ncff",
+        "ncfi",
+        "ncfinv",
+        "ncfo",
+        "ncfx",
+        "netinc",
+        "netinccmn",
+        "netinccmnusd",
+        "netincdis",
+        "netincnci",
+        "netmargin",
+        "opex",
+        "opinc",
+        "payables",
+        "payoutratio",
+        "pb",
+        "pe",
+        "pe1",
+        "ppnenet",
+        "prefdivis",
+        "price",
+        "ps",
+        "ps1",
+        "receivables",
+        "retearn",
+        "revenue",
+        "revenueusd",
+        "rnd",
+        "roa",
+        "roe",
+        "roic",
+        "ros",
+        "sbcomp",
+        "sgna",
+        "sharefactor",
+        "sharesbas",
+        "shareswa",
+        "shareswadil",
+        "sps",
+        "tangibles",
+        "taxassets",
+        "taxexp",
+        "taxliabilities",
+        "tbvps",
+        "workingcapital"
+      ],
+      "columns": [
+        {
+          "name": "ticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "dimension",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "calendardate",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "date",
+          "postgres_type": "date",
+          "nullable": false
+        },
+        {
+          "name": "reportperiod",
+          "postgres_type": "date",
+          "nullable": false
+        },
+        {
+          "name": "fiscalperiod",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "lastupdated",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "accoci",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "assets",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "assetsavg",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "assetsc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "assetsnc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "assetturnover",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "bvps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "capex",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "cashneq",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "cashnequsd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "cor",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "consolinc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "currentratio",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "de",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "debt",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "debtc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "debtnc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "debtusd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "deferredrev",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "depamor",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "deposits",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "divyield",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "dps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ebit",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ebitda",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ebitdamargin",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ebitdausd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ebitusd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ebt",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "eps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "epsdil",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "epsusd",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "equity",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "equityavg",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "equityusd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ev",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "evebit",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "evebitda",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "fcf",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "fcfps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "fxusd",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "gp",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "grossmargin",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "intangibles",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "intexp",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "invcap",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "invcapavg",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "inventory",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "investments",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "investmentsc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "investmentsnc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "liabilities",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "liabilitiesc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "liabilitiesnc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "marketcap",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncf",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfbus",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfcommon",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfdebt",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfdiv",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncff",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfi",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfinv",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfo",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "ncfx",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "netinc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "netinccmn",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "netinccmnusd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "netincdis",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "netincnci",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "netmargin",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "opex",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "opinc",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "payables",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "payoutratio",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "pb",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "pe",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "pe1",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ppnenet",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "prefdivis",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "price",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ps1",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "receivables",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "retearn",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "revenue",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "revenueusd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "rnd",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "roa",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "roe",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "roic",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ros",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "sbcomp",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "sgna",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "sharefactor",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "sharesbas",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "shareswa",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "shareswadil",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "sps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "tangibles",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "taxassets",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "taxexp",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "taxliabilities",
+          "postgres_type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "tbvps",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "workingcapital",
+          "postgres_type": "bigint",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "ticker",
+        "dimension",
+        "date",
+        "reportperiod"
+      ],
+      "date_columns": [
+        "calendardate",
+        "date",
+        "reportperiod",
+        "lastupdated"
+      ]
+    },
+    {
+      "name": "daily",
+      "source_url": "https://api.sharadar.com/v1.0/schema/daily?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "0c7ac3809c1a3446d61d6b3923c016eb18d7ef28c809346e5f89f2f6f6a11406",
+      "ordered_headers": [
+        "ticker",
+        "date",
+        "lastupdated",
+        "ev",
+        "evebit",
+        "evebitda",
+        "marketcap",
+        "pb",
+        "pe",
+        "ps"
+      ],
+      "columns": [
+        {
+          "name": "ticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "date",
+          "postgres_type": "date",
+          "nullable": false
+        },
+        {
+          "name": "lastupdated",
+          "postgres_type": "date",
+          "nullable": true
+        },
+        {
+          "name": "ev",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "evebit",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "evebitda",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "marketcap",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "pb",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "pe",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "ps",
+          "postgres_type": "double precision",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "ticker",
+        "date"
+      ],
+      "date_columns": [
+        "date",
+        "lastupdated"
+      ]
+    },
+    {
+      "name": "actions",
+      "source_url": "https://api.sharadar.com/v1.0/schema/actions?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "b3f15eb095658dc657e855492d47a26351859d5c1164f6a2e011d483c7416dc7",
+      "ordered_headers": [
+        "date",
+        "action",
+        "ticker",
+        "name",
+        "value",
+        "contraticker",
+        "contraname"
+      ],
+      "columns": [
+        {
+          "name": "date",
+          "postgres_type": "date",
+          "nullable": false
+        },
+        {
+          "name": "action",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "ticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "postgres_type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "contraticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "contraname",
+          "postgres_type": "text",
+          "nullable": false
+        }
+      ],
+      "primary_key": [
+        "date",
+        "action",
+        "ticker",
+        "name",
+        "contraticker",
+        "contraname"
+      ],
+      "date_columns": [
+        "date"
+      ]
+    },
+    {
+      "name": "events",
+      "source_url": "https://api.sharadar.com/v1.0/schema/events?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "249a4f83f0e0ee70821a4a7219b74d28e09870c7803db0cf3bcf5a03d83f567a",
+      "ordered_headers": [
+        "ticker",
+        "date",
+        "eventcodes"
+      ],
+      "columns": [
+        {
+          "name": "ticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "date",
+          "postgres_type": "date",
+          "nullable": false
+        },
+        {
+          "name": "eventcodes",
+          "postgres_type": "text",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "date",
+        "ticker"
+      ],
+      "date_columns": [
+        "date"
+      ]
+    },
+    {
+      "name": "sp500",
+      "source_url": "https://api.sharadar.com/v1.0/schema/sp500?format=postgres",
+      "source_as_of": "2026-08-18",
+      "source_sha256": "a9125e6daf8f5cf12fc7c2df388cd0e6611e105fbd4d76fb8fdb174dfb3c8473",
+      "ordered_headers": [
+        "date",
+        "action",
+        "ticker",
+        "name",
+        "contraticker",
+        "contraname",
+        "note"
+      ],
+      "columns": [
+        {
+          "name": "date",
+          "postgres_type": "date",
+          "nullable": false
+        },
+        {
+          "name": "action",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "ticker",
+          "postgres_type": "text",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "contraticker",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "contraname",
+          "postgres_type": "text",
+          "nullable": true
+        },
+        {
+          "name": "note",
+          "postgres_type": "text",
+          "nullable": true
+        }
+      ],
+      "primary_key": [
+        "date",
+        "action",
+        "ticker"
+      ],
+      "date_columns": [
+        "date"
+      ]
+    }
+  ]
+}
