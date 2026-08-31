@@ -173,6 +173,54 @@ the starting watermark. Re-running the bulk command for one or more tables is
 the reconciliation mechanism; content hashes and primary-key upserts make it
 idempotent.
 
+## Resident PROD daily scheduler
+
+The Mac Studio owns the resident launchd agent
+`com.medina.sharadar-prod-daily`. launchd invokes the guarded runner hourly at
+minute 45; the runner executes at most once per `America/New_York` service date
+and only after 00:45 ET. A failed prerequisite or update leaves the service date
+incomplete, so the next hourly invocation retries automatically.
+
+Safety boundaries:
+
+- the `/Volumes/Pentagon_Quant` SMB mount, PROD artifact root and baseline
+  receipt must exist before any API or Mongo write;
+- a local non-blocking file lock prevents overlapping runs;
+- a successful service date is written atomically under `var/state/`;
+- the API key and Mongo URI remain in Medina Vault/bootstrap files and never
+  appear in the launchd plist or process arguments;
+- only `tickers`, `fundamentals`, and `daily` use daily `lastupdated` deltas;
+  tables without that vendor clock remain bulk-reconciliation tables.
+
+Operational commands:
+
+```bash
+# Read-only prerequisite/schedule check
+venv/bin/python scripts/run_prod_daily.py --check-only
+
+# Operator-triggered run; still enforces NAS and overlap lock
+venv/bin/python scripts/run_prod_daily.py --force
+
+# Inspect the installed agent and logs
+launchctl print gui/$(id -u)/com.medina.sharadar-prod-daily
+tail -n 100 var/log/prod_daily.out.log
+tail -n 100 var/log/prod_daily.err.log
+```
+
+### 2026-08-31 deployment evidence
+
+- Installed plist:
+  `/Users/chouwilliam/Library/LaunchAgents/com.medina.sharadar-prod-daily.plist`
+- launchd domain and status: `gui/501`, loaded, first launch exit code `0`.
+- First guarded live PROD run completed from
+  `2026-08-31T03:45:58Z` to `2026-08-31T03:46:52Z`.
+- Delta artifacts admitted: `tickers=13,453`, `fundamentals=1,546`,
+  `daily=32,782`; all three published manifests exist.
+- The immediate launchd bootstrap invocation returned `SKIPPED / already_complete`,
+  confirming that the same Eastern service date was not written twice.
+- Local scheduler state and logs live under the ignored `var/` directory; licensed
+  artifacts remain on the PROD NAS and current rows remain in `SHARADAR_PROD`.
+
 ## Deferred tests
 
 Large crash/concurrency/memory soaks and signed-URL-expiry reacquisition remain

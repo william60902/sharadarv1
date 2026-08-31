@@ -32,8 +32,16 @@ venv/bin/python scripts/backfill_prod.py
 # Read-only verification of the published PROD baseline
 venv/bin/python scripts/verify_prod_baseline.py \
   --output /Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod/readiness/latest.json
+
+# Inspect the resident daily scheduler prerequisites without writing
+venv/bin/python scripts/run_prod_daily.py --check-only
 ```
 
 The initial PROD baseline completed on 2026-08-31. Reconciliation and selected
 table reruns remain protected by `--execute` and two exact confirmations; see
 `docs/20260831_dev_storage_and_prod_backfill_readiness.md`.
+
+`com.medina.sharadar-prod-daily` is installed as a Mac Studio launchd agent. It
+checks hourly at minute 45, runs once after 00:45 America/New_York, retries after
+failures, and updates only the three tables with a documented `lastupdated`
+watermark: `tickers`, `fundamentals`, and `daily`.
