@@ -1,19 +1,22 @@
-# DEV storage and PROD backfill readiness
+# DEV storage and PROD full-history baseline
 
 Date: 2026-08-31
 
 ## Outcome
 
-The Sharadar vendor pipeline is now prepared up to, but not including, the
-first `SHARADAR_PROD` full-history write.  A real paid-data canary is published
-in Mongo `SHARADAR_DEV` and on the supercomputer-mounted NAS at:
+The Sharadar vendor pipeline now has both a paid-data DEV canary and a completed
+`SHARADAR_PROD` full-history baseline.  DEV is published in Mongo
+`SHARADAR_DEV` and on the supercomputer-mounted NAS at:
 
 ```text
 /Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev
 ```
 
-The production directory exists as an empty deployment target. Mongo database
-`SHARADAR_PROD` has not been created and no production data download has run.
+PROD is published in Mongo `SHARADAR_PROD` and at:
+
+```text
+/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod
+```
 
 ## Storage contract
 
@@ -21,7 +24,7 @@ The production directory exists as an empty deployment target. Mongo database
 Sharadar REST / Bulk
   -> immutable content-addressed raw capture
   -> pinned schema v1 exact-header and type admission
-  -> normalized Parquet on NAS
+  -> schema-admitted Parquet on NAS
   -> schema-admitted query collection in Mongo
   -> watermark
   -> immutable published run manifest (commit marker, written last)
@@ -90,16 +93,56 @@ Two integration defects appeared only on the real deployment path:
 Both fixes were rerun through the real seven-table DEV materialization and the
 readiness gate.
 
-## PROD execution
+## PROD full-history result
 
-The default command is a safe live-DEV recheck plus a dry plan:
+The first full-history Bulk baseline completed on 2026-08-31:
+
+| Table | Mongo collection | Rows |
+|---|---|---:|
+| descriptions | `descriptions` | 382 |
+| tickers | `tickers` | 74,078 |
+| fundamentals | `fundamentals` | 3,216,147 |
+| daily | `daily` | 40,083,673 |
+| actions | `actions` | 688,880 |
+| events | `events` | 2,585,951 |
+| sp500 | `sp500` | 59,674 |
+| **Total** |  | **46,708,785** |
+
+The full `fundamentals` dimension distribution confirms that As-Reported and
+Most-Recent lanes remain independently addressable:
+
+| Dimension | Rows |
+|---|---:|
+| ARQ | 681,430 |
+| ART | 688,153 |
+| ARY | 186,623 |
+| MRQ | 718,807 |
+| MRT | 737,798 |
+| MRY | 203,336 |
+
+Factor PDATA must explicitly select `ARQ` / `ARY` / `ART` and use AR `date` as
+the conservative filing-date availability clock. MR dimensions are retained for
+comparison and restatement-aware research, not silently mixed into PIT signals.
+
+The read-only baseline report is stored at:
+
+```text
+/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod/readiness/latest.json
+```
+
+It verifies the exact seven-collection set, Mongo/manifest/Parquet row-count
+agreement, published manifests, schema fingerprints, artifact byte counts,
+primary-key indexes and watermarks. Full artifact rehashing remains available
+through `scripts/verify_prod_baseline.py --rehash` but is intentionally not part
+of every routine readback.
+
+The safe dry plan remains:
 
 ```bash
 venv/bin/python scripts/backfill_prod.py
 ```
 
-It currently returns `status=READY` for all seven tables.  To start the actual
-full-history Bulk backfill after William gives the final go-ahead:
+To reconcile or rerun selected tables after an explicit operator decision:
 
 ```bash
 venv/bin/python scripts/backfill_prod.py \
@@ -108,11 +151,11 @@ venv/bin/python scripts/backfill_prod.py \
   --production-confirmation BACKFILL_SHARADAR_PROD
 ```
 
-The command re-runs the live DEV readiness gate before connecting to PROD.  It
+The command re-runs the live DEV readiness gate before connecting to PROD. It
 downloads each table through a credential-free second hop, requires exact
 versioned headers, streams CSV with bounded memory, writes Mongo in batches,
-publishes Parquet and a final manifest, and can resume selected tables with
-repeated `--table` options.
+publishes Parquet and a final manifest. Use repeated `--table` options to limit a
+reconciliation run instead of unnecessarily reprocessing all seven tables.
 
 ## Daily update after the baseline
 
@@ -132,8 +175,8 @@ idempotent.
 
 ## Deferred tests
 
-Large crash/concurrency/memory soaks, signed-URL-expiry reacquisition, and a
-complete paid full-history acceptance run remain deferred until the actual PROD
-backfill. The current milestone used the SDK suite, focused storage/readiness
-tests, real paid REST canary, checksum verification, and one deterministic
-replay per table.
+Large crash/concurrency/memory soaks and signed-URL-expiry reacquisition remain
+deferred. The paid full-history acceptance run is no longer deferred: 7/7 tables
+completed and passed the bounded PROD readback. Routine readback uses metadata,
+file sizes and database collection statistics; a full 2.9GB artifact rehash is
+kept as an explicit audit option rather than repeated on every run.
