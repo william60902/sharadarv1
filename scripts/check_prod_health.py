@@ -64,6 +64,28 @@ def expected_monthly_service_month(now: datetime) -> str:
     return current.strftime("%Y-%m")
 
 
+def service_date_at_least(actual: object, expected: str) -> bool:
+    """Return true when the completed daily service date meets or leads the gate."""
+    if not isinstance(actual, str):
+        return False
+    try:
+        return date.fromisoformat(actual) >= date.fromisoformat(expected)
+    except ValueError:
+        return False
+
+
+def service_month_at_least(actual: object, expected: str) -> bool:
+    """Return true when the completed monthly service month meets or leads the gate."""
+    if not isinstance(actual, str):
+        return False
+    try:
+        actual_month = datetime.strptime(actual, "%Y-%m").date()
+        expected_month = datetime.strptime(expected, "%Y-%m").date()
+    except ValueError:
+        return False
+    return actual_month >= expected_month
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -141,13 +163,13 @@ def build_report(now: datetime | None = None) -> dict[str, Any]:
         "prod_artifact_root": PROD_ROOT.is_dir(),
         "daily_scheduler_loaded": _is_loaded(DAILY_LABEL),
         "monthly_scheduler_loaded": _is_loaded(MONTHLY_LABEL),
-        "daily_service_current": (
-            daily_state.get("last_success_service_date")
-            == expected_daily_service_date(checked_at)
+        "daily_service_current": service_date_at_least(
+            daily_state.get("last_success_service_date"),
+            expected_daily_service_date(checked_at),
         ),
-        "monthly_reconciliation_current": (
-            monthly_state.get("last_success_month")
-            == expected_monthly_service_month(checked_at)
+        "monthly_reconciliation_current": service_month_at_least(
+            monthly_state.get("last_success_month"),
+            expected_monthly_service_month(checked_at),
         ),
     }
     table_results: list[dict[str, Any]] = []

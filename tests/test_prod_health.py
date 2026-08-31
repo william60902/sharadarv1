@@ -28,3 +28,10 @@ def test_expected_monthly_service_month_rolls_after_window() -> None:
     assert MODULE.expected_monthly_service_month(
         datetime(2026, 9, 2, 7, 15, tzinfo=UTC)
     ) == "2026-09"
+
+
+def test_service_freshness_accepts_state_ahead_of_current_gate() -> None:
+    assert MODULE.service_date_at_least("2026-08-31", "2026-08-30")
+    assert not MODULE.service_date_at_least("2026-08-29", "2026-08-30")
+    assert MODULE.service_month_at_least("2026-09", "2026-08")
+    assert not MODULE.service_month_at_least("invalid", "2026-08")

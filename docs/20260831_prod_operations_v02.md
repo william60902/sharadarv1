@@ -96,6 +96,23 @@ unique primary-key indexes. Reports are written to:
 - local: `var/health/latest.json`;
 - NAS: `/mnt/nas/Medina_US_Equity/sharadar/prod/health/latest.json`.
 
+The production cutover was accepted directly on `medina-supercomputer`:
+
+- remote daily state: service date `2026-08-31`, with both `lastupdated` and
+  `date_overlap` complete;
+- remote monthly state: service month `2026-08`, initialized from the verified
+  full-history baseline;
+- baseline readback: `PASS`, seven exact collections and `46,708,899` rows;
+- crontab marker `MEDINA SHARADAR_PROD`: installed exactly once while preserving
+  all unrelated host jobs;
+- repository/runtime: commit `85b5986`, Python `3.12.13`, isolated `venv`.
+
+One acceptance-only health defect was found and corrected: a forced daily run
+may legitimately complete a service date newer than the current Eastern-time
+gate. Freshness therefore means `completed >= expected`, not strict equality.
+Malformed or older state still fails the check. The same monotonic rule applies
+to monthly reconciliation.
+
 The first Mac launchd deployment was not retained: an unattended Python process
 could see the SMB mount but blocked when opening network-volume files under the
 macOS TCC context. The always-on Ubuntu supercomputer has a verified persistent
