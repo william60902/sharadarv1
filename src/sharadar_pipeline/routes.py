@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -32,22 +33,25 @@ class SharadarRoute:
     live_write_authorized: bool
 
 
+_ARTIFACT_BASE = (
+    Path("/Volumes/Medina_US_Equity/sharadar")
+    if sys.platform == "darwin"
+    else Path("/mnt/nas/Medina_US_Equity/sharadar")
+)
+
+
 _ROUTES = {
     Deployment.DEV: SharadarRoute(
         deployment=Deployment.DEV,
         database_name="SHARADAR_DEV",
-        artifact_root=Path(
-            "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev"
-        ),
+        artifact_root=_ARTIFACT_BASE / "dev",
         write_confirmation="SHARADAR_DEV_WRITE",
         live_write_authorized=True,
     ),
     Deployment.PROD: SharadarRoute(
         deployment=Deployment.PROD,
         database_name="SHARADAR_PROD",
-        artifact_root=Path(
-            "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod"
-        ),
+        artifact_root=_ARTIFACT_BASE / "prod",
         write_confirmation="SHARADAR_PROD_WRITE",
         live_write_authorized=False,
     ),

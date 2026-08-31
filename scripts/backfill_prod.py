@@ -18,7 +18,7 @@ from sharadar_pipeline.bulk_pipeline import ingest_bulk_table
 from sharadar_pipeline.catalog import SharadarTable
 from sharadar_pipeline.readiness import gate_specs_from_registry, verify_dev_readiness
 from sharadar_pipeline.readiness_storage import DevStorageEvidenceSource
-from sharadar_pipeline.routes import PRODUCTION_BACKFILL_CONFIRMATION
+from sharadar_pipeline.routes import PRODUCTION_BACKFILL_CONFIRMATION, route_for
 from sharadar_pipeline.runtime import connect_mongo_runtime
 from sharadar_pipeline.schema_registry import FUNDAMENTALS_TABLES, load_schema_registry
 from sharadar_pipeline.storage import (
@@ -79,9 +79,7 @@ def main() -> int:
     )
     plan = {
         "database": "SHARADAR_PROD",
-        "artifact_root": (
-            "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod"
-        ),
+        "artifact_root": str(route_for("prod").artifact_root),
         "history": "full",
         "mode": "bulk",
         "schema_registry_sha256": registry.resource_sha256,

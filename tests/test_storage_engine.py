@@ -16,6 +16,7 @@ from sharadar_pipeline.storage import (
     normalize_row,
     resolve_registry,
 )
+from sharadar_pipeline.storage.engine import _canonicalize_vendor_row
 
 REGISTRY = {
     "daily": {
@@ -98,6 +99,18 @@ def test_official_registry_resolves_and_strictly_coerces() -> None:
     assert normalized["marketcap"] == 123.5
     assert normalized["ev"] == 99.0
     assert normalized["pe"] is None
+
+
+def test_ticker_dataset_aliases_are_canonicalized_before_primary_key_admission() -> None:
+    source = {"table": "SF1", "permaticker": "123", "ticker": "AAPL"}
+
+    assert _canonicalize_vendor_row("tickers", source) == {
+        "table": "fundamentals",
+        "permaticker": "123",
+        "ticker": "AAPL",
+    }
+    assert source["table"] == "SF1"
+    assert _canonicalize_vendor_row("daily", source) is source
 
 
 def test_raw_capture_is_content_addressed_and_replay_safe(tmp_path: Path) -> None:

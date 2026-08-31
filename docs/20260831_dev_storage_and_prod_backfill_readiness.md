@@ -9,13 +9,13 @@ The Sharadar vendor pipeline now has both a paid-data DEV canary and a completed
 `SHARADAR_DEV` and on the supercomputer-mounted NAS at:
 
 ```text
-/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev
+/mnt/nas/Medina_US_Equity/sharadar/dev
 ```
 
 PROD is published in Mongo `SHARADAR_PROD` and at:
 
 ```text
-/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod
+/mnt/nas/Medina_US_Equity/sharadar/prod
 ```
 
 ## Storage contract
@@ -69,7 +69,7 @@ immutable on NAS; Mongo collection naming does not change lineage or replay.
 The read-only promotion report is stored at:
 
 ```text
-/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev/readiness/latest.json
+/mnt/nas/Medina_US_Equity/sharadar/dev/readiness/latest.json
 ```
 
 It reports `ready_for_prod_backfill=true`, `failed_checks=0`, and deliberately
@@ -127,7 +127,7 @@ comparison and restatement-aware research, not silently mixed into PIT signals.
 The read-only baseline report is stored at:
 
 ```text
-/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod/readiness/latest.json
+/mnt/nas/Medina_US_Equity/sharadar/prod/readiness/latest.json
 ```
 
 It verifies the exact seven-collection set, Mongo/manifest/Parquet row-count
@@ -175,22 +175,24 @@ idempotent.
 
 ## Resident PROD daily scheduler
 
-The Mac Studio owns the resident launchd agent
-`com.medina.sharadar-prod-daily`. launchd invokes the guarded runner hourly at
+The Ubuntu supercomputer owns the resident cron schedule. Cron invokes the guarded runner hourly at
 minute 45; the runner executes at most once per `America/New_York` service date
 and only after 00:45 ET. A failed prerequisite or update leaves the service date
 incomplete, so the next hourly invocation retries automatically.
 
 Safety boundaries:
 
-- the `/Volumes/Pentagon_Quant` SMB mount, PROD artifact root and baseline
+- the `/mnt/nas/Medina_US_Equity` CIFS mount, PROD artifact root and baseline
   receipt must exist before any API or Mongo write;
 - a local non-blocking file lock prevents overlapping runs;
 - a successful service date is written atomically under `var/state/`;
 - the API key and Mongo URI remain in Medina Vault/bootstrap files and never
-  appear in the launchd plist or process arguments;
-- only `tickers`, `fundamentals`, and `daily` use daily `lastupdated` deltas;
-  tables without that vendor clock remain bulk-reconciliation tables.
+  appear in crontab or process arguments;
+- `tickers`, `fundamentals`, and `daily` use daily `lastupdated` deltas;
+- `actions` and `events` use bounded date overlap, with actions including
+  announced future effective dates;
+- all seven tables receive a monthly full Bulk reconciliation so old vendor
+  revisions outside the overlap windows are eventually repaired.
 
 Operational commands:
 
@@ -201,25 +203,28 @@ venv/bin/python scripts/run_prod_daily.py --check-only
 # Operator-triggered run; still enforces NAS and overlap lock
 venv/bin/python scripts/run_prod_daily.py --force
 
-# Inspect the installed agent and logs
-launchctl print gui/$(id -u)/com.medina.sharadar-prod-daily
+# Inspect the installed schedule and logs
+crontab -l | grep sharadar
 tail -n 100 var/log/prod_daily.out.log
 tail -n 100 var/log/prod_daily.err.log
 ```
 
-### 2026-08-31 deployment evidence
+### 2026-08-31 initial live evidence
 
-- Installed plist:
-  `/Users/chouwilliam/Library/LaunchAgents/com.medina.sharadar-prod-daily.plist`
-- launchd domain and status: `gui/501`, loaded, first launch exit code `0`.
+- The first live acceptance run was initiated on the Mac Studio before the
+  production scheduler moved to `medina-supercomputer`.
 - First guarded live PROD run completed from
   `2026-08-31T03:45:58Z` to `2026-08-31T03:46:52Z`.
 - Delta artifacts admitted: `tickers=13,453`, `fundamentals=1,546`,
   `daily=32,782`; all three published manifests exist.
-- The immediate launchd bootstrap invocation returned `SKIPPED / already_complete`,
+- The immediate scheduler replay returned `SKIPPED / already_complete`,
   confirming that the same Eastern service date was not written twice.
 - Local scheduler state and logs live under the ignored `var/` directory; licensed
   artifacts remain on the PROD NAS and current rows remain in `SHARADAR_PROD`.
+
+Operations v0.2, including date overlap, monthly reconciliation, health checks,
+and the consumer reader, is documented separately in
+`docs/20260831_prod_operations_v02.md`.
 
 ## Deferred tests
 

@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -77,13 +78,14 @@ def test_routes_bind_exact_database_and_artifact_root():
     dev = route_for("dev")
     prod = route_for(Deployment.PROD)
     assert dev.database_name == "SHARADAR_DEV"
-    assert dev.artifact_root == Path(
-        "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev"
+    base = (
+        Path("/Volumes/Medina_US_Equity/sharadar")
+        if sys.platform == "darwin"
+        else Path("/mnt/nas/Medina_US_Equity/sharadar")
     )
+    assert dev.artifact_root == base / "dev"
     assert prod.database_name == "SHARADAR_PROD"
-    assert prod.artifact_root == Path(
-        "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod"
-    )
+    assert prod.artifact_root == base / "prod"
 
 
 def test_dev_write_requires_exact_confirmation():
@@ -134,9 +136,7 @@ def test_forged_route_cannot_cross_database_or_artifact_boundaries():
     forged = SharadarRoute(
         deployment=Deployment.DEV,
         database_name="SHARADAR_PROD",
-        artifact_root=Path(
-            "/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/prod"
-        ),
+        artifact_root=route_for("prod").artifact_root,
         write_confirmation="SHARADAR_DEV_WRITE",
         live_write_authorized=True,
     )

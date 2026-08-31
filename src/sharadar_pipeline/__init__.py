@@ -31,6 +31,7 @@ from .routes import (
     require_route_io,
     route_for,
 )
+from .reader import AS_REPORTED_DIMENSIONS, SharadarReader
 from .runtime import MongoRuntime, connect_mongo_runtime
 from .schema_registry import (
     SchemaRegistry,
@@ -44,6 +45,7 @@ from .storage import ArtifactStore, MongoCurrentStore, VendorStorageEngine
 __all__ = [
     "PRODUCTION_BACKFILL_CONFIRMATION",
     "ArtifactStore",
+    "AS_REPORTED_DIMENSIONS",
     "BulkDownloadReceipt",
     "BulkDownloader",
     "BulkPipelineReceipt",
@@ -63,6 +65,7 @@ __all__ = [
     "SharadarClient",
     "SharadarError",
     "SharadarRoute",
+    "SharadarReader",
     "SharadarTable",
     "SortDirection",
     "SortSpec",

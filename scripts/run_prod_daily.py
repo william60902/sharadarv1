@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the SHARADAR_PROD incremental update once per US/Eastern service day.
 
-launchd invokes this entry point hourly.  The script waits until the configured
+The host scheduler invokes this entry point hourly. The script waits until the configured
 Eastern-time cutoff, refuses to write when the NAS is not mounted, prevents
 overlap with an existing run, and records success locally so retries stop after
 the first successful run of the day.
@@ -33,7 +33,7 @@ EASTERN = ZoneInfo("America/New_York")
 DEFAULT_CUTOFF = time(0, 45)
 RUNTIME_ROOT = REPO_ROOT / "var"
 STATE_PATH = RUNTIME_ROOT / "state" / "prod_daily.json"
-LOCK_PATH = RUNTIME_ROOT / "run" / "prod_daily.lock"
+LOCK_PATH = RUNTIME_ROOT / "run" / "prod_ingestion.lock"
 
 
 def parse_args() -> argparse.Namespace:
@@ -110,7 +110,7 @@ def schedule_decision(
 
 def _require_prod_nas() -> Path:
     root = route_for("prod").artifact_root
-    mount = Path("/Volumes/Pentagon_Quant")
+    mount = root.parents[1]
     if not os.path.ismount(mount):
         raise RuntimeError(f"required NAS is not mounted: {mount}")
     if not root.is_dir():
@@ -134,10 +134,8 @@ def _exclusive_lock(path: Path = LOCK_PATH) -> Iterator[None]:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
-def _incremental_command(service_date: str) -> list[str]:
-    return [
-        str(REPO_ROOT / "venv" / "bin" / "python"),
-        str(REPO_ROOT / "scripts" / "update_incremental.py"),
+def _update_commands(service_date: str) -> list[tuple[str, list[str]]]:
+    common = [
         "--deployment",
         "prod",
         "--as-of",
@@ -146,6 +144,17 @@ def _incremental_command(service_date: str) -> list[str]:
         "SHARADAR_PROD_WRITE",
         "--production-confirmation",
         "BACKFILL_SHARADAR_PROD",
+    ]
+    python = str(REPO_ROOT / "venv" / "bin" / "python")
+    return [
+        (
+            "lastupdated",
+            [python, str(REPO_ROOT / "scripts" / "update_incremental.py"), *common],
+        ),
+        (
+            "date_overlap",
+            [python, str(REPO_ROOT / "scripts" / "update_date_overlap.py"), *common],
+        ),
     ]
 
 
@@ -179,20 +188,22 @@ def main() -> int:
         with _exclusive_lock():
             started_at = datetime.now(UTC)
             _emit("STARTED", reason=reason, service_date=service_date)
-            result = subprocess.run(
-                _incremental_command(service_date),
-                cwd=REPO_ROOT,
-                check=False,
-            )
+            completed_steps: list[str] = []
+            for step, command in _update_commands(service_date):
+                _emit("STEP_STARTED", step=step, service_date=service_date)
+                result = subprocess.run(command, cwd=REPO_ROOT, check=False)
+                if result.returncode != 0:
+                    _emit(
+                        "RETRY_REQUIRED",
+                        reason="daily_update_step_failed",
+                        step=step,
+                        completed_steps=completed_steps,
+                        service_date=service_date,
+                        returncode=result.returncode,
+                    )
+                    return result.returncode or 1
+                completed_steps.append(step)
             finished_at = datetime.now(UTC)
-            if result.returncode != 0:
-                _emit(
-                    "RETRY_REQUIRED",
-                    reason="incremental_update_failed",
-                    service_date=service_date,
-                    returncode=result.returncode,
-                )
-                return result.returncode or 1
             _write_state(
                 {
                     "version": 1,
@@ -201,9 +212,14 @@ def main() -> int:
                     "last_success_started_at": started_at.isoformat(),
                     "last_success_finished_at": finished_at.isoformat(),
                     "artifact_root": str(artifact_root),
+                    "completed_steps": completed_steps,
                 }
             )
-            _emit("COMPLETE", service_date=service_date)
+            _emit(
+                "COMPLETE",
+                service_date=service_date,
+                completed_steps=completed_steps,
+            )
             return 0
     except RuntimeError as error:
         _emit("RETRY_REQUIRED", reason="lock_unavailable", error=str(error))

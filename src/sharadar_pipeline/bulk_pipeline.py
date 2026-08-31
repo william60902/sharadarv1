@@ -76,7 +76,9 @@ def ingest_bulk_table(
         rows,
         registry,
         source_watermark=watermark,
-        pipeline_version="bulk-v1",
+        pipeline_version=(
+            "bulk-v2" if exact_table is SharadarTable.TICKERS else "bulk-v1"
+        ),
     )
     return BulkPipelineReceipt(download=download, storage=storage)
 

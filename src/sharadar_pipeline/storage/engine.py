@@ -87,7 +87,7 @@ class VendorStorageEngine:
         batch: list[Mapping[str, Any]] = []
         try:
             for row in rows:
-                batch.append(row)
+                batch.append(_canonicalize_vendor_row(exact_table, row))
                 if len(batch) >= self.row_batch_size:
                     parquet_writer.write_rows(batch)
                     mongo_totals.append(
@@ -186,6 +186,27 @@ def _run_id(
         raise ValueError("pipeline_version must be a non-empty string")
     value = f"{table}\0{raw_sha256}\0{schema_fingerprint}\0{pipeline_version}".encode()
     return hashlib.sha256(value).hexdigest()
+
+
+def _canonicalize_vendor_row(
+    table: str, row: Mapping[str, Any]
+) -> Mapping[str, Any]:
+    """Resolve REST/Bulk representation differences before typed admission.
+
+    Sharadar Bulk uses dataset codes such as ``SF1`` and ``SEP`` in the
+    ``tickers.table`` field, while REST returns ``fundamentals`` and ``stocks``.
+    The field participates in the official primary key, so retaining both wire
+    spellings would create semantic duplicates. Raw captures remain untouched.
+    """
+
+    if table != "tickers":
+        return row
+    value = row.get("table")
+    if value in (None, ""):
+        return row
+    normalized = dict(row)
+    normalized["table"] = normalize_table(str(value)).value
+    return normalized
 
 
 def _watermark_value(value: Mapping[str, Any] | str | float | None) -> Any:

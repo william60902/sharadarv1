@@ -8,7 +8,7 @@ Date: 2026-08-31
 Fundamentals canary has been written to `SHARADAR_DEV`.  It reads Mongo current
 collections and the committed NAS manifests under:
 
-`/Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev`
+`/Volumes/Medina_US_Equity/sharadar/dev`
 
 It cannot select PROD, does not write either database, and always emits
 `prod_write_authorized: false`.  A green report means the full-history PROD
@@ -45,7 +45,7 @@ From the repository virtual environment:
 ```bash
 cd /Users/chouwilliam/Medina/sharadarv1
 venv/bin/python scripts/verify_dev_readiness.py \
-  --output /Volumes/Pentagon_Quant/Medina_US_Equity/sharadar/dev/readiness/latest.json
+  --output /Volumes/Medina_US_Equity/sharadar/dev/readiness/latest.json
 ```
 
 Exit codes:

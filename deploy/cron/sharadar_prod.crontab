@@ -1,0 +1,8 @@
+# BEGIN MEDINA SHARADAR_PROD
+# SHARADAR_PROD operations on medina-supercomputer (host timezone Asia/Taipei).
+# Each wrapper applies its own America/New_York service-date gate, so DST does
+# not change the intended vendor cutoff. Hourly calls are no-ops after success.
+45 * * * * cd /home/medina/Medina/sharadarv1 && venv/bin/python scripts/run_prod_daily.py >> var/log/prod_daily.out.log 2>> var/log/prod_daily.err.log
+15 * * * * cd /home/medina/Medina/sharadarv1 && venv/bin/python scripts/run_prod_monthly.py >> var/log/prod_monthly.out.log 2>> var/log/prod_monthly.err.log
+20 */2 * * * cd /home/medina/Medina/sharadarv1 && venv/bin/python scripts/check_prod_health.py --compact --notify >> var/log/prod_health.out.log 2>> var/log/prod_health.err.log
+# END MEDINA SHARADAR_PROD
