@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from pymongo import MongoClient
-
 from .routes import SharadarRoute, require_route_io, route_for
+
+import sys
+
+MEDINA_ROOT = Path(__file__).resolve().parents[3]
+if str(MEDINA_ROOT) not in sys.path:
+    sys.path.insert(0, str(MEDINA_ROOT))
+
+from pm.pkg.mongo_connector import (  # noqa: E402
+    MongoConnector,
+    PIPELINE_RW_PROFILE,
+    READONLY_PROFILE,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,28 +36,13 @@ class MongoRuntime:
             close()
 
 
-def _workspace_mongo_uri_getter() -> str:
-    """Read the Medina Mongo bootstrap without exposing it to argv or logs."""
-
-    workspace_root = Path(__file__).resolve().parents[3]
-    root_text = str(workspace_root)
-    if root_text not in sys.path:
-        sys.path.insert(0, root_text)
-    try:
-        from hub.vault.core import MONGO_URI_FILE, _read_bootstrap_file
-    except ModuleNotFoundError:
-        raise RuntimeError("Medina Hub Vault bootstrap is not importable") from None
-    return _read_bootstrap_file(MONGO_URI_FILE)
-
-
 def connect_mongo_runtime(
     deployment: str,
     *,
     write: bool,
     confirmation: str | None = None,
     production_confirmation: str | None = None,
-    uri_getter: Callable[[], str] | None = None,
-    client_factory: Callable[..., Any] = MongoClient,
+    connector_factory: Callable[..., Any] = MongoConnector,
 ) -> MongoRuntime:
     """Resolve and authorize the exact route before reading Mongo credentials."""
 
@@ -60,16 +54,8 @@ def connect_mongo_runtime(
         confirmation=confirmation,
         production_confirmation=production_confirmation,
     )
-    getter = uri_getter or _workspace_mongo_uri_getter
-    uri = getter()
-    client = client_factory(
-        uri,
-        serverSelectionTimeoutMS=10_000,
-        connectTimeoutMS=10_000,
-        socketTimeoutMS=120_000,
-        tz_aware=True,
-        appname="medina-sharadar",
-    )
+    profile = PIPELINE_RW_PROFILE if write else READONLY_PROFILE
+    client = connector_factory(profile=profile).get_client()
     try:
         client.admin.command("ping")
         database = client[route.database_name]
