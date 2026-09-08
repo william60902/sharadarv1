@@ -4,6 +4,11 @@ Sharadar point-in-time US fundamentals ingestion pipeline with immutable bulk
 captures, schema-admitted Parquet datasets, revision lineage, and reproducible daily
 updates.
 
+## AI project instructions
+
+See [AGENTS.md](AGENTS.md). In particular, valid `uv.lock` changes are to be
+committed and pushed as routine repository maintenance without asking again.
+
 ## Runtime boundary
 
 - Mongo: `SHARADAR_DEV` and `SHARADAR_PROD`.
