@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,11 @@ def parse_args() -> argparse.Namespace:
         )
     )
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument(
+        "--recurring-prod",
+        action="store_true",
+        help="Use strict existing PROD baseline admission for monthly maintenance, not initial promotion.",
+    )
     parser.add_argument(
         "--table",
         action="append",
@@ -70,12 +76,46 @@ def _verify_live_dev(registry: object) -> dict[str, object]:
         runtime.close()
 
 
+def _verify_recurring_prod() -> dict[str, object]:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts/verify_prod_baseline.py"),
+            "--compact",
+            "--require-pinned-baseline",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    if result.returncode:
+        raise RuntimeError("recurring PROD baseline verification failed")
+    report = json.loads(result.stdout)
+    if (
+        report.get("status") != "PASS"
+        or report.get("database") != "SHARADAR_PROD"
+        or not report.get("baseline_report_sha256")
+    ):
+        raise RuntimeError("recurring PROD baseline receipt is invalid")
+    return {
+        "policy": "recurring_prod_pinned_baseline@1.0.0",
+        "checked_at": report["checked_at"],
+        "baseline_report_sha256": report["baseline_report_sha256"],
+        "baseline_runs": {row["table"]: row["run_id"] for row in report["tables"]},
+        "prod_write_authorized": False,
+    }
+
+
 def main() -> int:
     args = parse_args()
     registry = load_schema_registry()
-    readiness = _verify_live_dev(registry)
+    readiness = (
+        _verify_recurring_prod() if args.recurring_prod else _verify_live_dev(registry)
+    )
     tables = tuple(
-        SharadarTable(value) for value in (args.table or [t.value for t in FUNDAMENTALS_TABLES])
+        SharadarTable(value)
+        for value in (args.table or [t.value for t in FUNDAMENTALS_TABLES])
     )
     plan = {
         "database": "SHARADAR_PROD",
@@ -84,7 +124,7 @@ def main() -> int:
         "mode": "bulk",
         "schema_registry_sha256": registry.resource_sha256,
         "tables": [table.value for table in tables],
-        "dev_readiness": readiness,
+        "prod_readiness" if args.recurring_prod else "dev_readiness": readiness,
         "execute": args.execute,
     }
     if not args.execute:
@@ -93,9 +133,7 @@ def main() -> int:
     if args.confirmation != "SHARADAR_PROD_WRITE":
         raise SystemExit("--confirmation must be SHARADAR_PROD_WRITE")
     if args.production_confirmation != PRODUCTION_BACKFILL_CONFIRMATION:
-        raise SystemExit(
-            "--production-confirmation must be BACKFILL_SHARADAR_PROD"
-        )
+        raise SystemExit("--production-confirmation must be BACKFILL_SHARADAR_PROD")
 
     runtime = connect_mongo_runtime(
         "prod",

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .catalog import SharadarTable
+from .artifact_paths import resolve_artifact_path
 from .readiness import (
     FundamentalsCanaryEvidence,
     ReadinessConfigurationError,
@@ -33,9 +34,7 @@ class DevStorageEvidenceSource:
 
     def inspect_table(self, spec: TableGateSpec) -> TableEvidence:
         table = spec.table.value
-        watermark = self._read_json(
-            self.artifact_root / "watermarks" / f"{table}.json"
-        )
+        watermark = self._read_json(self.artifact_root / "watermarks" / f"{table}.json")
         run_id = _required_string(watermark, "run_id")
         expected_manifest = (
             self.artifact_root / "runs" / table / f"{run_id}.json"
@@ -66,11 +65,7 @@ class DevStorageEvidenceSource:
         null_filter = {
             "$and": [
                 run_filter,
-                {
-                    "$or": [
-                        {field: None} for field in spec.primary_key
-                    ]
-                },
+                {"$or": [{field: None} for field in spec.primary_key]},
             ]
         }
         null_rows = int(collection.count_documents(null_filter))
@@ -82,13 +77,12 @@ class DevStorageEvidenceSource:
 
         raw = _mapping(manifest, "raw_capture")
         parquet = _mapping(manifest, "parquet")
-        checksum_ok = self._artifact_receipt_valid(raw) and self._artifact_receipt_valid(
-            parquet
-        )
-        replay_ok = (
-            manifest.get("replay_verified") is True
-            and _deterministic_run_identity(manifest, expected_manifest)
-        )
+        checksum_ok = self._artifact_receipt_valid(
+            raw
+        ) and self._artifact_receipt_valid(parquet)
+        replay_ok = manifest.get(
+            "replay_verified"
+        ) is True and _deterministic_run_identity(manifest, expected_manifest)
         indexes_ok = _required_indexes_present(
             collection.index_information(), spec.primary_key
         )
@@ -217,9 +211,7 @@ def _missing_clock_rows(
 ) -> int:
     if not fields:
         return 0
-    query = {
-        "$and": [dict(run_filter), {"$or": [{field: None} for field in fields]}]
-    }
+    query = {"$and": [dict(run_filter), {"$or": [{field: None} for field in fields]}]}
     return int(collection.count_documents(query))
 
 
@@ -230,9 +222,7 @@ def _clock_order_violations(
 ) -> int:
     if not order:
         return 0
-    comparisons = [
-        {"$gt": [f"${earlier}", f"${later}"]} for earlier, later in order
-    ]
+    comparisons = [{"$gt": [f"${earlier}", f"${later}"]} for earlier, later in order]
     query = {
         "$and": [
             dict(run_filter),
@@ -288,21 +278,14 @@ def _deterministic_run_identity(
 
 
 def _path_contains_digest(path: Any, digest: Any) -> bool:
-    return (
-        isinstance(path, str)
-        and _is_sha256(digest)
-        and Path(path).stem == digest
-    )
+    return isinstance(path, str) and _is_sha256(digest) and Path(path).stem == digest
 
 
 def _safe_artifact_path(root: Path, value: str) -> Path:
-    path = Path(value)
-    resolved = (path if path.is_absolute() else root / path).resolve()
     try:
-        resolved.relative_to(root)
+        return resolve_artifact_path(root, value, deployment="dev")
     except ValueError:
         raise ReadinessConfigurationError("artifact path escapes DEV root") from None
-    return resolved
 
 
 def _mapping(value: Mapping[str, Any], key: str) -> Mapping[str, Any]:

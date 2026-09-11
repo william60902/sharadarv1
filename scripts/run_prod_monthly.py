@@ -130,6 +130,7 @@ def _backfill_command() -> list[str]:
     return [
         str(REPO_ROOT / "venv" / "bin" / "python"),
         str(REPO_ROOT / "scripts" / "backfill_prod.py"),
+        "--recurring-prod",
         "--execute",
         "--confirmation",
         "SHARADAR_PROD_WRITE",
@@ -143,9 +144,7 @@ def main() -> int:
     now = datetime.now(UTC)
     root = _require_prod_nas()
     state = _read_json(STATE_PATH)
-    should_run, reason, service_month = monthly_decision(
-        now, state, force=args.force
-    )
+    should_run, reason, service_month = monthly_decision(now, state, force=args.force)
 
     if args.initialize_current_baseline:
         baseline = _read_json(root / "readiness" / "latest.json")

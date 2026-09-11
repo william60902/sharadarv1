@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from sharadar_pipeline.runtime import connect_mongo_runtime
+from sharadar_pipeline.artifact_paths import resolve_artifact_path
 from sharadar_pipeline.schema_registry import (
     FUNDAMENTALS_TABLES,
     load_schema_registry,
@@ -33,6 +34,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--compact", action="store_true")
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--require-pinned-baseline",
+        action="store_true",
+        help="Require a complete prior PROD PASS baseline; never fall back to current watermarks.",
+    )
     parser.add_argument(
         "--baseline-report",
         type=Path,
@@ -59,9 +65,14 @@ def main() -> int:
         actual = sorted(runtime.database.list_collection_names())
         collection_set_ok = set(actual) == set(expected)
         baseline_report_path = (
-            args.baseline_report or root / "readiness" / "latest.json"
-        ).expanduser().resolve()
+            (args.baseline_report or root / "readiness" / "latest.json")
+            .expanduser()
+            .resolve()
+        )
         baseline_run_ids = _baseline_run_ids(baseline_report_path, expected)
+        if args.require_pinned_baseline:
+            baseline_run_ids = _strict_baseline_run_ids(baseline_report_path, expected)
+        baseline_sha = _sha256(baseline_report_path) if baseline_run_ids else None
         results: list[dict[str, Any]] = []
 
         for table in expected:
@@ -115,8 +126,8 @@ def main() -> int:
             }
             if args.rehash:
                 checks["raw_sha256"] = _sha256(raw_path) == raw.get("sha256")
-                checks["parquet_sha256"] = (
-                    _sha256(parquet_path) == parquet.get("sha256")
+                checks["parquet_sha256"] = _sha256(parquet_path) == parquet.get(
+                    "sha256"
                 )
             results.append(
                 {
@@ -130,6 +141,8 @@ def main() -> int:
             )
 
         passed = collection_set_ok and all(item["passed"] for item in results)
+        if baseline_sha and _sha256(baseline_report_path) != baseline_sha:
+            raise ValueError("baseline evidence changed during verification")
         report = {
             "format": "sharadar.prod-baseline-readback/v1",
             "checked_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
@@ -137,18 +150,22 @@ def main() -> int:
             "database": runtime.route.database_name,
             "artifact_root": str(root),
             "baseline_report": str(baseline_report_path),
+            "baseline_report_sha256": baseline_sha,
             "collection_set_ok": collection_set_ok,
             "collections": actual,
             "rehash": args.rehash,
             "total_rows": sum(item["rows"] for item in results),
             "tables": results,
         }
-        rendered = json.dumps(
-            report,
-            indent=None if args.compact else 2,
-            sort_keys=True,
-            default=str,
-        ) + "\n"
+        rendered = (
+            json.dumps(
+                report,
+                indent=None if args.compact else 2,
+                sort_keys=True,
+                default=str,
+            )
+            + "\n"
+        )
         if args.output is not None:
             _write_report(args.output, rendered)
         sys.stdout.write(rendered)
@@ -191,6 +208,51 @@ def _required_string(payload: dict[str, Any], key: str) -> str:
     return value
 
 
+def _strict_baseline_run_ids(path: Path, expected: list[str]) -> dict[str, str]:
+    payload = _read_json(path)
+    if (
+        payload.get("format") != "sharadar.prod-baseline-readback/v1"
+        or payload.get("database") != "SHARADAR_PROD"
+        or payload.get("status") != "PASS"
+        or payload.get("collection_set_ok") is not True
+    ):
+        raise ValueError(
+            "recurring reconciliation requires approved PROD baseline evidence"
+        )
+    tables = payload.get("tables")
+    if not isinstance(tables, list) or len(tables) != len(expected):
+        raise ValueError("baseline table inventory differs")
+    result = {}
+    required = {
+        "baseline_published_manifest",
+        "schema_fingerprint",
+        "mongo_contains_baseline",
+        "parquet_matches_manifest",
+        "raw_size",
+        "parquet_size",
+        "primary_key_index",
+        "current_watermark_published",
+    }
+    for item in tables:
+        if not isinstance(item, dict):
+            raise ValueError("invalid baseline table")
+        table, run_id = item.get("table"), item.get("run_id")
+        checks = item.get("checks", {})
+        if (
+            table not in expected
+            or table in result
+            or item.get("passed") is not True
+            or not isinstance(run_id, str)
+            or len(run_id) != 64
+            or any(c not in "0123456789abcdef" for c in run_id)
+            or not isinstance(checks, dict)
+            or any(checks.get(key) is not True for key in required)
+        ):
+            raise ValueError("baseline table evidence is not approved")
+        result[table] = run_id
+    return result
+
+
 def _required_mapping(payload: dict[str, Any], key: str) -> dict[str, Any]:
     value = payload.get(key)
     if not isinstance(value, dict):
@@ -200,15 +262,7 @@ def _required_mapping(payload: dict[str, Any], key: str) -> dict[str, Any]:
 
 def _artifact_path(root: Path, receipt: dict[str, Any]) -> Path:
     declared = _required_string(receipt, "artifact_path")
-    declared_path = Path(declared).expanduser()
-    path = declared_path.resolve()
-    if path.is_relative_to(root):
-        return path
-    parts = declared_path.parts
-    for index in range(len(parts) - 1):
-        if parts[index : index + 2] == ("sharadar", "prod"):
-            return root.joinpath(*parts[index + 2 :]).resolve()
-    raise ValueError("artifact path escapes SHARADAR_PROD root")
+    return resolve_artifact_path(root, declared, deployment="prod")
 
 
 def _size_matches(path: Path, receipt: dict[str, Any]) -> bool:
